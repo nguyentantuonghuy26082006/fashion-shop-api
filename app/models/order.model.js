@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
-    unique: true,
-    required: true
+    unique: true
+    // Bỏ required vì sẽ auto-generate trong pre('save')
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -111,8 +111,8 @@ orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ orderNumber: 1 });
 orderSchema.index({ status: 1 });
 
-// Auto-generate order number
-orderSchema.pre('save', async function(next) {
+// Auto-generate order number BEFORE validation
+orderSchema.pre('validate', async function(next) {
   if (!this.orderNumber) {
     const count = await mongoose.model('Order').countDocuments();
     const date = new Date();
@@ -121,4 +121,4 @@ orderSchema.pre('save', async function(next) {
   next();
 });
 
-module.exports = mongoose.model('Order', orderSchema);
+module.exports = mongoose.model('Order', orderSchema);  

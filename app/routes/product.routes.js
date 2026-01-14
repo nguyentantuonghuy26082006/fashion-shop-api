@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/product.controller');
-const { verifyToken, optionalAuth } = require('../middlewares/auth.middleware');
+const { protect, optionalAuth } = require('../middlewares/auth.middleware');
 const { isModerator } = require('../middlewares/role.middleware');
 const { uploadMultiple, handleUploadError } = require('../middlewares/upload.middleware');
 
@@ -12,7 +12,7 @@ router.get('/:id', productController.getProductById);
 // Protected routes - Admin/Moderator only
 router.post(
   '/',
-  verifyToken,
+  protect,
   isModerator,
   uploadMultiple,
   handleUploadError,
@@ -21,7 +21,7 @@ router.post(
 
 router.put(
   '/:id',
-  verifyToken,
+  protect,
   isModerator,
   uploadMultiple,
   handleUploadError,
@@ -30,7 +30,7 @@ router.put(
 
 router.delete(
   '/:id',
-  verifyToken,
+  protect,
   isModerator,
   productController.deleteProduct
 );

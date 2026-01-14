@@ -249,6 +249,19 @@ exports.updateProduct = async (req, res) => {
  * @desc    Xóa sản phẩm (Admin/Moderator only)
  * @access  Private/Admin/Moderator
  */
+// ================================================
+// SỬA LỖI XÓA SẢN PHẨM
+// ================================================
+// Mở file: app/controllers/product.controller.js
+// Tìm hàm deleteProduct (khoảng dòng 252)
+// Thay thế TOÀN BỘ hàm deleteProduct bằng code bên dưới:
+// ================================================
+
+/**
+ * @route   DELETE /api/products/:id
+ * @desc    Xóa sản phẩm (Admin/Moderator only)
+ * @access  Private/Admin/Moderator
+ */
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -260,12 +273,19 @@ exports.deleteProduct = async (req, res) => {
       });
     }
 
-    // Xóa ảnh trên Cloudinary
+    // Xóa ảnh trên Cloudinary (nếu có và là ảnh Cloudinary)
     if (product.images && product.images.length > 0) {
-      const deletePromises = product.images.map(img =>
-        deleteFromCloudinary(img.public_id)
-      );
-      await Promise.all(deletePromises);
+      for (const img of product.images) {
+        // Chỉ xóa nếu là ảnh Cloudinary (có public_id hợp lệ)
+        // Bỏ qua ảnh từ URL bên ngoài (Unsplash, etc.)
+        if (img.public_id && img.url && img.url.includes('cloudinary')) {
+          try {
+            await deleteFromCloudinary(img.public_id);
+          } catch (err) {
+            console.log('Bỏ qua lỗi xóa ảnh Cloudinary:', img.public_id);
+          }
+        }
+      }
     }
 
     await product.deleteOne();
@@ -276,6 +296,7 @@ exports.deleteProduct = async (req, res) => {
     });
 
   } catch (error) {
+    console.error('Lỗi xóa sản phẩm:', error);
     res.status(500).json({
       success: false,
       message: 'Lỗi xóa sản phẩm',

@@ -37,3 +37,6 @@ coverage/
 # Build
 dist/
 build/
+app.zip
+fashion-shop/
+quick-fix.bat
