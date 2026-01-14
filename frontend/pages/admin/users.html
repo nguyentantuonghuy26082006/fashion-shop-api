@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý người dùng - Admin - Fashion Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <style>
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 5px 10px;
+            transition: all 0.3s;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .stat-card {
+            border-left: 4px solid;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .table-actions button {
+            padding: 4px 8px;
+            font-size: 0.875rem;
+        }
+
+        .badge-role {
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        .user-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .search-box {
+            max-width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="../../index.html">
+                <i class="fas fa-shopping-bag me-2"></i>
+                FASHION SHOP ADMIN
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-white" id="adminName">Admin</span>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    Đăng xuất
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="py-4">
+                    <div class="nav flex-column">
+                        <a href="dashboard.html" class="nav-link">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Dashboard
+                        </a>
+                        <a href="products.html" class="nav-link">
+                            <i class="fas fa-box me-2"></i>
+                            Sản phẩm
+                        </a>
+                        <a href="orders.html" class="nav-link">
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            Đơn hàng
+                        </a>
+                        <a href="users.html" class="nav-link active">
+                            <i class="fas fa-users me-2"></i>
+                            Người dùng
+                        </a>
+                        <hr class="text-white mx-3">
+                        <a href="../../index.html" class="nav-link">
+                            <i class="fas fa-home me-2"></i>
+                            Về trang chủ
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1">
+                            <i class="fas fa-users text-primary me-2"></i>
+                            Quản lý người dùng
+                        </h2>
+                        <p class="text-muted mb-0">Quản lý thông tin và quyền người dùng</p>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left-color: #667eea;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Tổng người dùng</p>
+                                        <h3 class="mb-0" id="totalUsers">0</h3>
+                                    </div>
+                                    <div class="text-primary">
+                                        <i class="fas fa-users fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left-color: #28a745;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Hoạt động</p>
+                                        <h3 class="mb-0 text-success" id="activeUsers">0</h3>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-user-check fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left-color: #dc3545;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Admin</p>
+                                        <h3 class="mb-0 text-danger" id="adminCount">0</h3>
+                                    </div>
+                                    <div class="text-danger">
+                                        <i class="fas fa-user-shield fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left-color: #ffc107;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Mới hôm nay</p>
+                                        <h3 class="mb-0 text-warning" id="newToday">0</h3>
+                                    </div>
+                                    <div class="text-warning">
+                                        <i class="fas fa-user-plus fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters & Search -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="input-group search-box">
+                                    <input type="text" class="form-control" id="searchInput" 
+                                           placeholder="Tìm kiếm theo tên, email...">
+                                    <button class="btn btn-primary" onclick="searchUsers()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <select class="form-select" id="roleFilter" onchange="filterUsers()">
+                                    <option value="">Tất cả quyền</option>
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <select class="form-select" id="statusFilter" onchange="filterUsers()">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="active">Hoạt động</option>
+                                    <option value="inactive">Ngưng hoạt động</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                                    <i class="fas fa-redo me-1"></i>
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                Danh sách người dùng
+                            </h5>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="exportUsers()">
+                                    <i class="fas fa-download me-1"></i>
+                                    Export Excel
+                                </button>
+                                <button class="btn btn-sm btn-primary" onclick="refreshUsers()">
+                                    <i class="fas fa-sync me-1"></i>
+                                    Làm mới
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 5%">#</th>
+                                        <th style="width: 30%">Người dùng</th>
+                                        <th style="width: 15%">Số điện thoại</th>
+                                        <th style="width: 10%">Quyền</th>
+                                        <th style="width: 15%">Ngày đăng ký</th>
+                                        <th style="width: 10%">Trạng thái</th>
+                                        <th style="width: 15%" class="text-center">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="text-muted mt-2">Đang tải dữ liệu...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <div id="pagination" class="d-flex justify-content-center"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>
+                        Chỉnh sửa người dùng
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Họ tên</label>
+                            <input type="text" class="form-control" id="editFullName" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" id="editPhone" readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Quyền</label>
+                            <select class="form-select" id="editRole">
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" id="editStatus">
+                                <option value="true">Hoạt động</option>
+                                <option value="false">Ngưng hoạt động</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUserChanges()">
+                        <i class="fas fa-save me-1"></i>
+                        Lưu thay đổi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/config.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="../../assets/js/api.js"></script>
+    <script src="../../assets/js/admin.js"></script>
+
+    <script>
+        let allUsers = [];
+        let filteredUsers = [];
+        let currentPage = 1;
+        const usersPerPage = 10;
+        let editModal;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check admin access
+            if (!checkAdminAccess()) {
+                return;
+            }
+
+            // Initialize modal
+            editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+
+            // Load admin name
+            const user = getUser();
+            if (user) {
+                document.getElementById('adminName').textContent = user.fullName || 'Admin';
+            }
+
+            // Load users
+            await loadUsers();
+
+            // Search on Enter
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchUsers();
+                }
+            });
+        });
+
+        async function loadUsers() {
+            try {
+                showLoading();
+                
+                const data = await getAllUsers();
+                
+                hideLoading();
+
+                if (data.success) {
+                    allUsers = data.data;
+                    filteredUsers = [...allUsers];
+                    updateStatistics();
+                    displayUsers();
+                } else {
+                    showToast('Không thể tải danh sách người dùng!', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error loading users:', error);
+                showToast('Có lỗi xảy ra!', 'error');
+            }
+        }
+
+        function updateStatistics() {
+            const total = allUsers.length;
+            const active = allUsers.filter(u => u.isActive).length;
+            const admins = allUsers.filter(u => u.roles && u.roles.includes('admin')).length;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const newToday = allUsers.filter(u => {
+                const createdDate = new Date(u.createdAt);
+                createdDate.setHours(0, 0, 0, 0);
+                return createdDate.getTime() === today.getTime();
+            }).length;
+
+            document.getElementById('totalUsers').textContent = total;
+            document.getElementById('activeUsers').textContent = active;
+            document.getElementById('adminCount').textContent = admins;
+            document.getElementById('newToday').textContent = newToday;
+        }
+
+        function displayUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (filteredUsers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-2"></i>
+                            <p class="text-muted">Không tìm thấy người dùng nào</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Pagination
+            const start = (currentPage - 1) * usersPerPage;
+            const end = start + usersPerPage;
+            const paginatedUsers = filteredUsers.slice(start, end);
+
+            tbody.innerHTML = paginatedUsers.map((user, index) => {
+                const isAdmin = user.roles && user.roles.includes('admin');
+                const displayIndex = start + index + 1;
+                
+                return `
+                    <tr class="user-row">
+                        <td>${displayIndex}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="${user.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.fullName)}" 
+                                     alt="${user.fullName}" 
+                                     class="user-avatar me-3">
+                                <div>
+                                    <div class="fw-bold">${user.fullName}</div>
+                                    <small class="text-muted">${user.email}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${user.phone || '<span class="text-muted">Chưa có</span>'}</td>
+                        <td>
+                            <span class="badge badge-role bg-${isAdmin ? 'danger' : 'primary'}">
+                                <i class="fas fa-${isAdmin ? 'user-shield' : 'user'} me-1"></i>
+                                ${isAdmin ? 'Admin' : 'User'}
+                            </span>
+                        </td>
+                        <td>
+                            <small>${new Date(user.createdAt).toLocaleDateString('vi-VN')}</small>
+                        </td>
+                        <td>
+                            <span class="badge bg-${user.isActive ? 'success' : 'secondary'}">
+                                ${user.isActive ? 'Hoạt động' : 'Ngưng'}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group table-actions">
+                                <button class="btn btn-sm btn-info" onclick="viewUser('${user._id}')" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning" onclick="editUserModal('${user._id}')" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${!isAdmin ? `
+                                    <button class="btn btn-sm btn-danger" onclick="confirmDeleteUser('${user._id}')" title="Xóa">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update pagination
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+            const paginationEl = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+
+            let html = '<ul class="pagination mb-0">';
+            
+            // Previous
+            html += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            `;
+            
+            // Pages
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    html += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+                }
+            }
+            
+            // Next
+            html += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            `;
+            
+            html += '</ul>';
+            paginationEl.innerHTML = html;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            displayUsers();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function searchUsers() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!keyword) {
+                filteredUsers = [...allUsers];
+            } else {
+                filteredUsers = allUsers.filter(user => 
+                    user.fullName.toLowerCase().includes(keyword) ||
+                    user.email.toLowerCase().includes(keyword) ||
+                    (user.phone && user.phone.includes(keyword))
+                );
+            }
+            
+            currentPage = 1;
+            displayUsers();
+        }
+
+        function filterUsers() {
+            const roleFilter = document.getElementById('roleFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            
+            filteredUsers = allUsers.filter(user => {
+                const roleMatch = !roleFilter || (
+                    roleFilter === 'admin' ? 
+                    (user.roles && user.roles.includes('admin')) : 
+                    (!user.roles || !user.roles.includes('admin'))
+                );
+                
+                const statusMatch = !statusFilter || (
+                    statusFilter === 'active' ? user.isActive : !user.isActive
+                );
+                
+                return roleMatch && statusMatch;
+            });
+            
+            currentPage = 1;
+            displayUsers();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('roleFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            
+            filteredUsers = [...allUsers];
+            currentPage = 1;
+            displayUsers();
+        }
+
+        function viewUser(userId) {
+            const user = allUsers.find(u => u._id === userId);
+            if (!user) return;
+            
+            alert(`Chi tiết người dùng:\n\n` +
+                  `Tên: ${user.fullName}\n` +
+                  `Email: ${user.email}\n` +
+                  `SĐT: ${user.phone || 'Chưa có'}\n` +
+                  `Quyền: ${user.roles && user.roles.includes('admin') ? 'Admin' : 'User'}\n` +
+                  `Trạng thái: ${user.isActive ? 'Hoạt động' : 'Ngưng hoạt động'}\n` +
+                  `Ngày tạo: ${new Date(user.createdAt).toLocaleString('vi-VN')}`
+            );
+        }
+
+        function editUserModal(userId) {
+            const user = allUsers.find(u => u._id === userId);
+            if (!user) return;
+            
+            document.getElementById('editUserId').value = user._id;
+            document.getElementById('editFullName').value = user.fullName;
+            document.getElementById('editEmail').value = user.email;
+            document.getElementById('editPhone').value = user.phone || '';
+            document.getElementById('editRole').value = user.roles && user.roles.includes('admin') ? 'admin' : 'user';
+            document.getElementById('editStatus').value = user.isActive ? 'true' : 'false';
+            
+            editModal.show();
+        }
+
+        async function saveUserChanges() {
+            const userId = document.getElementById('editUserId').value;
+            const role = document.getElementById('editRole').value;
+            const isActive = document.getElementById('editStatus').value === 'true';
+            
+            try {
+                showLoading();
+                
+                // Update role
+                const roles = role === 'admin' ? ['user', 'admin'] : ['user'];
+                const roleData = await updateUserRole(userId, roles);
+                
+                if (!roleData.success) {
+                    throw new Error(roleData.message || 'Không thể cập nhật quyền');
+                }
+                
+                hideLoading();
+                editModal.hide();
+                showToast('Đã cập nhật thông tin người dùng!');
+                
+                // Reload users
+                await loadUsers();
+                
+            } catch (error) {
+                hideLoading();
+                console.error('Error saving user:', error);
+                showToast(error.message || 'Có lỗi xảy ra!', 'error');
+            }
+        }
+
+        async function confirmDeleteUser(userId) {
+            const user = allUsers.find(u => u._id === userId);
+            if (!user) return;
+            
+            if (!confirm(`Bạn có chắc muốn xóa người dùng "${user.fullName}"?\n\nHành động này không thể hoàn tác!`)) {
+                return;
+            }
+            
+            const success = await deleteUserAccount(userId);
+            
+            if (success) {
+                await loadUsers();
+            }
+        }
+
+        async function refreshUsers() {
+            await loadUsers();
+            showToast('Đã làm mới danh sách!');
+        }
+
+        function exportUsers() {
+            showToast('Tính năng export đang phát triển!', 'error');
+        }
+    </script>
+</body>
+
+</html>

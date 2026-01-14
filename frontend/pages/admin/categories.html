@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý danh mục - Admin - Fashion Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+    <style>
+        .sidebar {
+            min-height: calc(100vh - 56px);
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 5px 10px;
+            transition: all 0.3s;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .category-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .category-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .category-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-card {
+            border-left: 4px solid;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .category-actions {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .category-card:hover .category-actions {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark bg-dark sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="../../index.html">
+                <i class="fas fa-shopping-bag me-2"></i>
+                FASHION SHOP ADMIN
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-white" id="adminName">Admin</span>
+                <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    Đăng xuất
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="py-4">
+                    <div class="nav flex-column">
+                        <a href="dashboard.html" class="nav-link">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Dashboard
+                        </a>
+                        <a href="products.html" class="nav-link">
+                            <i class="fas fa-box me-2"></i>
+                            Sản phẩm
+                        </a>
+                        <a href="categories.html" class="nav-link active">
+                            <i class="fas fa-tags me-2"></i>
+                            Danh mục
+                        </a>
+                        <a href="orders.html" class="nav-link">
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            Đơn hàng
+                        </a>
+                        <a href="users.html" class="nav-link">
+                            <i class="fas fa-users me-2"></i>
+                            Người dùng
+                        </a>
+                        <hr class="text-white mx-3">
+                        <a href="../../index.html" class="nav-link">
+                            <i class="fas fa-home me-2"></i>
+                            Về trang chủ
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10 p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1">
+                            <i class="fas fa-tags text-primary me-2"></i>
+                            Quản lý danh mục
+                        </h2>
+                        <p class="text-muted mb-0">Quản lý các danh mục sản phẩm</p>
+                    </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                        <i class="fas fa-plus me-2"></i>
+                        Thêm danh mục
+                    </button>
+                </div>
+
+                <!-- Statistics -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left-color: #667eea;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Tổng danh mục</p>
+                                        <h3 class="mb-0" id="totalCategories">0</h3>
+                                    </div>
+                                    <div class="text-primary">
+                                        <i class="fas fa-tags fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left-color: #28a745;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Đang hoạt động</p>
+                                        <h3 class="mb-0 text-success" id="activeCategories">0</h3>
+                                    </div>
+                                    <div class="text-success">
+                                        <i class="fas fa-check-circle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left-color: #ffc107;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Tổng sản phẩm</p>
+                                        <h3 class="mb-0 text-warning" id="totalProducts">0</h3>
+                                    </div>
+                                    <div class="text-warning">
+                                        <i class="fas fa-box fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card stat-card border-0 shadow-sm" style="border-left-color: #17a2b8;">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Trung bình SP/DM</p>
+                                        <h3 class="mb-0 text-info" id="avgProducts">0</h3>
+                                    </div>
+                                    <div class="text-info">
+                                        <i class="fas fa-chart-bar fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search & Filter -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="searchInput" 
+                                           placeholder="Tìm kiếm danh mục...">
+                                    <button class="btn btn-primary" onclick="searchCategories()">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="statusFilter" onchange="filterCategories()">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="active">Đang hoạt động</option>
+                                    <option value="inactive">Tạm ngưng</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                                    <i class="fas fa-redo me-1"></i>
+                                    Làm mới
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories Grid -->
+                <div id="categoriesGrid" class="row g-4">
+                    <!-- Loading -->
+                    <div class="col-12 text-center py-5">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="text-muted mt-2">Đang tải danh mục...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>
+                        Thêm danh mục mới
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCategoryForm">
+                        <div class="mb-3">
+                            <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="addName" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" id="addDescription" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Slug (URL thân thiện)</label>
+                            <input type="text" class="form-control" id="addSlug">
+                            <small class="text-muted">Để trống để tự động tạo từ tên</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Icon (Font Awesome class)</label>
+                            <input type="text" class="form-control" id="addIcon" 
+                                   placeholder="fa-shirt, fa-shoe-prints, fa-tshirt...">
+                            <small class="text-muted">Ví dụ: fa-shirt, fa-shoe-prints</small>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="addIsActive" checked>
+                            <label class="form-check-label" for="addIsActive">
+                                Kích hoạt danh mục
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="saveCategory()">
+                        <i class="fas fa-save me-1"></i>
+                        Lưu danh mục
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div class="modal fade" id="editCategoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>
+                        Chỉnh sửa danh mục
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCategoryForm">
+                        <input type="hidden" id="editId">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Slug</label>
+                            <input type="text" class="form-control" id="editSlug">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Icon</label>
+                            <input type="text" class="form-control" id="editIcon">
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="editIsActive">
+                            <label class="form-check-label" for="editIsActive">
+                                Kích hoạt danh mục
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="updateCategory()">
+                        <i class="fas fa-save me-1"></i>
+                        Cập nhật
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/config.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="../../assets/js/api.js"></script>
+
+    <script>
+        let allCategories = [];
+        let filteredCategories = [];
+        let addModal, editModal;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Check admin access
+            if (!requireAdmin()) {
+                return;
+            }
+
+            // Initialize modals
+            addModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+            editModal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+
+            // Load admin name
+            const user = getUser();
+            if (user) {
+                document.getElementById('adminName').textContent = user.fullName || 'Admin';
+            }
+
+            // Load categories
+            await loadCategories();
+
+            // Auto-generate slug
+            document.getElementById('addName').addEventListener('input', (e) => {
+                const slug = generateSlug(e.target.value);
+                document.getElementById('addSlug').value = slug;
+            });
+
+            document.getElementById('editName').addEventListener('input', (e) => {
+                const slug = generateSlug(e.target.value);
+                document.getElementById('editSlug').value = slug;
+            });
+
+            // Search on Enter
+            document.getElementById('searchInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    searchCategories();
+                }
+            });
+        });
+
+        function generateSlug(text) {
+            return text
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/[^a-z0-9\s-]/g, '')
+                .trim()
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+        }
+
+        async function loadCategories() {
+            try {
+                showLoading();
+                
+                const response = await fetch(`${API_BASE_URL}/categories`, {
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+                
+                const data = await response.json();
+                hideLoading();
+
+                if (data.success) {
+                    allCategories = data.data;
+                    filteredCategories = [...allCategories];
+                    updateStatistics();
+                    displayCategories();
+                } else {
+                    showToast('Không thể tải danh mục!', 'error');
+                    displayEmptyState();
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error loading categories:', error);
+                showToast('Có lỗi xảy ra!', 'error');
+                displayEmptyState();
+            }
+        }
+
+        function updateStatistics() {
+            const total = allCategories.length;
+            const active = allCategories.filter(c => c.isActive !== false).length;
+            
+            // Calculate total products (if category has productCount)
+            const totalProds = allCategories.reduce((sum, c) => sum + (c.productCount || 0), 0);
+            const avg = total > 0 ? Math.round(totalProds / total) : 0;
+
+            document.getElementById('totalCategories').textContent = total;
+            document.getElementById('activeCategories').textContent = active;
+            document.getElementById('totalProducts').textContent = totalProds;
+            document.getElementById('avgProducts').textContent = avg;
+        }
+
+        function displayCategories() {
+            const grid = document.getElementById('categoriesGrid');
+            
+            if (filteredCategories.length === 0) {
+                displayEmptyState();
+                return;
+            }
+
+            grid.innerHTML = filteredCategories.map(category => {
+                const icon = category.icon || 'fa-tag';
+                const isActive = category.isActive !== false;
+                const productCount = category.productCount || 0;
+                
+                return `
+                    <div class="col-md-6 col-lg-4 col-xl-3">
+                        <div class="card category-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div class="category-icon">
+                                        <i class="fas ${icon}"></i>
+                                    </div>
+                                    <div class="category-actions">
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-warning" onclick="editCategoryModal('${category._id}')" title="Sửa">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger" onclick="deleteCategory('${category._id}')" title="Xóa">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <h5 class="card-title mb-2">${category.name}</h5>
+                                <p class="card-text text-muted small mb-3">
+                                    ${category.description || 'Chưa có mô tả'}
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge bg-${isActive ? 'success' : 'secondary'}">
+                                        ${isActive ? 'Hoạt động' : 'Tạm ngưng'}
+                                    </span>
+                                    <small class="text-muted">
+                                        <i class="fas fa-box me-1"></i>
+                                        ${productCount} SP
+                                    </small>
+                                </div>
+
+                                ${category.slug ? `
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-link me-1"></i>
+                                            ${category.slug}
+                                        </small>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayEmptyState() {
+            const grid = document.getElementById('categoriesGrid');
+            grid.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-tags fa-5x text-muted mb-3"></i>
+                    <h4>Chưa có danh mục nào</h4>
+                    <p class="text-muted mb-3">Thêm danh mục đầu tiên để quản lý sản phẩm</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                        <i class="fas fa-plus me-2"></i>
+                        Thêm danh mục
+                    </button>
+                </div>
+            `;
+        }
+
+        function searchCategories() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!keyword) {
+                filteredCategories = [...allCategories];
+            } else {
+                filteredCategories = allCategories.filter(cat => 
+                    cat.name.toLowerCase().includes(keyword) ||
+                    (cat.description && cat.description.toLowerCase().includes(keyword)) ||
+                    (cat.slug && cat.slug.includes(keyword))
+                );
+            }
+            
+            displayCategories();
+        }
+
+        function filterCategories() {
+            const status = document.getElementById('statusFilter').value;
+            
+            if (!status) {
+                filteredCategories = [...allCategories];
+            } else {
+                filteredCategories = allCategories.filter(cat => {
+                    if (status === 'active') return cat.isActive !== false;
+                    if (status === 'inactive') return cat.isActive === false;
+                    return true;
+                });
+            }
+            
+            displayCategories();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            filteredCategories = [...allCategories];
+            displayCategories();
+        }
+
+        async function saveCategory() {
+            const form = document.getElementById('addCategoryForm');
+            if (!form.checkValidity()) {
+                form.classList.add('was-validated');
+                return;
+            }
+
+            const categoryData = {
+                name: document.getElementById('addName').value.trim(),
+                description: document.getElementById('addDescription').value.trim(),
+                slug: document.getElementById('addSlug').value.trim(),
+                icon: document.getElementById('addIcon').value.trim(),
+                isActive: document.getElementById('addIsActive').checked
+            };
+
+            if (!categoryData.name) {
+                showToast('Vui lòng nhập tên danh mục!', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+                
+                const response = await fetch(`${API_BASE_URL}/categories`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify(categoryData)
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.success) {
+                    showToast('Thêm danh mục thành công!');
+                    addModal.hide();
+                    form.reset();
+                    await loadCategories();
+                } else {
+                    showToast(data.message || 'Không thể thêm danh mục!', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error saving category:', error);
+                showToast('Có lỗi xảy ra!', 'error');
+            }
+        }
+
+        function editCategoryModal(categoryId) {
+            const category = allCategories.find(c => c._id === categoryId);
+            if (!category) return;
+
+            document.getElementById('editId').value = category._id;
+            document.getElementById('editName').value = category.name;
+            document.getElementById('editDescription').value = category.description || '';
+            document.getElementById('editSlug').value = category.slug || '';
+            document.getElementById('editIcon').value = category.icon || '';
+            document.getElementById('editIsActive').checked = category.isActive !== false;
+
+            editModal.show();
+        }
+
+        async function updateCategory() {
+            const categoryId = document.getElementById('editId').value;
+            const categoryData = {
+                name: document.getElementById('editName').value.trim(),
+                description: document.getElementById('editDescription').value.trim(),
+                slug: document.getElementById('editSlug').value.trim(),
+                icon: document.getElementById('editIcon').value.trim(),
+                isActive: document.getElementById('editIsActive').checked
+            };
+
+            if (!categoryData.name) {
+                showToast('Vui lòng nhập tên danh mục!', 'error');
+                return;
+            }
+
+            try {
+                showLoading();
+                
+                const response = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify(categoryData)
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.success) {
+                    showToast('Cập nhật danh mục thành công!');
+                    editModal.hide();
+                    await loadCategories();
+                } else {
+                    showToast(data.message || 'Không thể cập nhật!', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error updating category:', error);
+                showToast('Có lỗi xảy ra!', 'error');
+            }
+        }
+
+        async function deleteCategory(categoryId) {
+            const category = allCategories.find(c => c._id === categoryId);
+            if (!category) return;
+
+            if (!confirm(`Bạn có chắc muốn xóa danh mục "${category.name}"?\n\nLưu ý: Các sản phẩm trong danh mục này sẽ không còn danh mục!`)) {
+                return;
+            }
+
+            try {
+                showLoading();
+                
+                const response = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.success) {
+                    showToast('Đã xóa danh mục!');
+                    await loadCategories();
+                } else {
+                    showToast(data.message || 'Không thể xóa!', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error deleting category:', error);
+                showToast('Có lỗi xảy ra!', 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - Fashion Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem 0;
+        }
+
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-tabs .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 600;
+            padding: 1rem 2rem;
+            border-radius: 0;
+        }
+
+        .auth-tabs .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .form-floating label {
+            color: #6c757d;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Toast notification */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .custom-toast {
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+            margin-bottom: 10px;
+        }
+
+        .toast-success { background: #10b981; }
+        .toast-error { background: #ef4444; }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="auth-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-5 col-md-7">
+                    <!-- Back Button -->
+                    <div class="mb-3">
+                        <a href="../index.html" class="btn btn-light rounded-pill">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Về trang chủ
+                        </a>
+                    </div>
+
+                    <!-- Auth Card -->
+                    <div class="auth-card">
+                        <!-- Logo -->
+                        <div class="text-center pt-4 pb-3">
+                            <h3 class="fw-bold">
+                                <i class="fas fa-shopping-bag text-primary"></i>
+                                <span class="gradient-text">FASHION SHOP</span>
+                            </h3>
+                            <p class="text-muted">Thời trang hiện đại, phong cách trẻ trung</p>
+                        </div>
+
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs auth-tabs justify-content-center border-0" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#loginTab" type="button">
+                                    <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#registerTab" type="button">
+                                    <i class="fas fa-user-plus me-2"></i>Đăng ký
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content p-4">
+                            <!-- ============== LOGIN TAB ============== -->
+                            <div class="tab-pane fade show active" id="loginTab">
+                                <form id="loginForm">
+                                    <div class="form-floating mb-3">
+                                        <input type="email" class="form-control" id="loginEmail" placeholder="Email" required>
+                                        <label for="loginEmail">
+                                            <i class="fas fa-envelope me-2"></i>Email
+                                        </label>
+                                    </div>
+
+                                    <div class="form-floating mb-3">
+                                        <input type="password" class="form-control" id="loginPassword" placeholder="Mật khẩu" required>
+                                        <label for="loginPassword">
+                                            <i class="fas fa-lock me-2"></i>Mật khẩu
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="rememberMe">
+                                        <label class="form-check-label" for="rememberMe">
+                                            Ghi nhớ đăng nhập
+                                        </label>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill mb-3" id="loginBtn">
+                                        <i class="fas fa-sign-in-alt me-2"></i>
+                                        Đăng nhập
+                                    </button>
+
+                                    <div class="text-center">
+                                        <a href="#" class="text-muted text-decoration-none">
+                                            Quên mật khẩu?
+                                        </a>
+                                    </div>
+                                </form>
+
+                                <!-- Quick Login (Demo) -->
+                                <div class="mt-4 p-3 bg-light rounded">
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Tài khoản demo:
+                                    </p>
+                                    <div class="d-grid gap-2">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="quickLogin('admin@fashionshop.com', 'Admin@123')">
+                                            <i class="fas fa-user-shield me-1"></i>
+                                            Admin (admin@fashionshop.com)
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success" onclick="quickLogin('user@test.com', 'User@123')">
+                                            <i class="fas fa-user me-1"></i>
+                                            User (user@test.com)
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ============== REGISTER TAB ============== -->
+                            <div class="tab-pane fade" id="registerTab">
+                                <form id="registerForm">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control" id="registerName" placeholder="Họ tên" required minlength="2">
+                                        <label for="registerName">
+                                            <i class="fas fa-user me-2"></i>Họ tên
+                                        </label>
+                                    </div>
+
+                                    <div class="form-floating mb-3">
+                                        <input type="email" class="form-control" id="registerEmail" placeholder="Email" required>
+                                        <label for="registerEmail">
+                                            <i class="fas fa-envelope me-2"></i>Email
+                                        </label>
+                                    </div>
+
+                                    <div class="form-floating mb-3">
+                                        <input type="tel" class="form-control" id="registerPhone" placeholder="Số điện thoại" pattern="[0-9]{10,11}" required>
+                                        <label for="registerPhone">
+                                            <i class="fas fa-phone me-2"></i>Số điện thoại
+                                        </label>
+                                    </div>
+
+                                    <div class="form-floating mb-3">
+                                        <input type="password" class="form-control" id="registerPassword" placeholder="Mật khẩu" required minlength="6">
+                                        <label for="registerPassword">
+                                            <i class="fas fa-lock me-2"></i>Mật khẩu (tối thiểu 6 ký tự)
+                                        </label>
+                                    </div>
+
+                                    <div class="form-floating mb-3">
+                                        <input type="password" class="form-control" id="registerConfirmPassword" placeholder="Xác nhận mật khẩu" required>
+                                        <label for="registerConfirmPassword">
+                                            <i class="fas fa-lock me-2"></i>Xác nhận mật khẩu
+                                        </label>
+                                    </div>
+
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                                        <label class="form-check-label" for="agreeTerms">
+                                            Tôi đồng ý với <a href="#">Điều khoản sử dụng</a>
+                                            và <a href="#">Chính sách bảo mật</a>
+                                        </label>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill" id="registerBtn">
+                                        <i class="fas fa-user-plus me-2"></i>
+                                        Đăng ký
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="text-center mt-4">
+                        <p class="text-white-50 small mb-0">
+                            © 2024 Fashion Shop. All rights reserved.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // ================================================
+        // CONFIGURATION
+        // ================================================
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // ================================================
+        // TOAST NOTIFICATION
+        // ================================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `custom-toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                ${message}
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-out forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ================================================
+        // CHECK IF ALREADY LOGGED IN
+        // ================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                window.location.href = '../index.html';
+            }
+        });
+
+        // ================================================
+        // HANDLE LOGIN
+        // ================================================
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showToast('Vui lòng nhập email và mật khẩu!', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('loginBtn');
+            const btnText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng nhập...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Save token and user info
+                    localStorage.setItem('token', data.data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+
+                    showToast('Đăng nhập thành công!');
+
+                    // Redirect
+                    setTimeout(() => {
+                        const redirectUrl = new URLSearchParams(window.location.search).get('redirect');
+                        window.location.href = redirectUrl || '../index.html';
+                    }, 1000);
+                } else {
+                    showToast(data.message || 'Đăng nhập thất bại!', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = btnText;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Không thể kết nối đến server!', 'error');
+                btn.disabled = false;
+                btn.innerHTML = btnText;
+            }
+        });
+
+        // ================================================
+        // HANDLE REGISTER
+        // ================================================
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const fullName = document.getElementById('registerName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const phone = document.getElementById('registerPhone').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+
+            // Validation
+            if (!fullName || fullName.length < 2) {
+                showToast('Họ tên phải có ít nhất 2 ký tự!', 'error');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showToast('Email không hợp lệ!', 'error');
+                return;
+            }
+
+            const phoneRegex = /^[0-9]{10,11}$/;
+            if (!phoneRegex.test(phone)) {
+                showToast('Số điện thoại phải có 10-11 chữ số!', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showToast('Mật khẩu phải có ít nhất 6 ký tự!', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showToast('Mật khẩu xác nhận không khớp!', 'error');
+                return;
+            }
+
+            if (!agreeTerms) {
+                showToast('Vui lòng đồng ý với điều khoản sử dụng!', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('registerBtn');
+            const btnText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang đăng ký...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fullName, email, phone, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Đăng ký thành công! Đang chuyển hướng...');
+
+                    // Auto login after register
+                    localStorage.setItem('token', data.data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+
+                    setTimeout(() => {
+                        window.location.href = '../index.html';
+                    }, 1500);
+                } else {
+                    showToast(data.message || 'Đăng ký thất bại!', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = btnText;
+                }
+            } catch (error) {
+                console.error('Register error:', error);
+                showToast('Không thể kết nối đến server!', 'error');
+                btn.disabled = false;
+                btn.innerHTML = btnText;
+            }
+        });
+
+        // ================================================
+        // QUICK LOGIN (DEMO)
+        // ================================================
+        function quickLogin(email, password) {
+            document.getElementById('loginEmail').value = email;
+            document.getElementById('loginPassword').value = password;
+            document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+        }
+    </script>
+</body>
+
+</html>

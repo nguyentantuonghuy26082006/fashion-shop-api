@@ -1,0 +1,529 @@
+<!-- ================================================
+     pages/admin/products.html - QUẢN LÝ SẢN PHẨM
+     ĐÃ SỬA LỖI XÓA SẢN PHẨM
+     ================================================ -->
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý sản phẩm - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+
+<body>
+    <!-- Same navbar & sidebar as dashboard.html -->
+    <nav class="navbar navbar-dark bg-dark shadow-sm sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="dashboard.html">
+                <i class="fas fa-shield-alt text-primary"></i>
+                <span class="ms-2">ADMIN PANEL</span>
+            </a>
+            <div class="d-flex align-items-center">
+                <a href="../../index.html" class="btn btn-outline-light btn-sm me-2">
+                    <i class="fas fa-home me-1"></i>Về trang chủ
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-shield me-1"></i><span id="adminName">Admin</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item text-danger" href="#" onclick="logout()">
+                                <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                            </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 bg-light py-4 min-vh-100">
+                <div class="nav flex-column">
+                    <a class="nav-link" href="dashboard.html"><i class="fas fa-chart-line me-2"></i>Dashboard</a>
+                    <a class="nav-link active" href="products.html"><i class="fas fa-box me-2"></i>Sản phẩm</a>
+                    <a class="nav-link" href="categories.html"><i class="fas fa-tags me-2"></i>Danh mục</a>
+                    <a class="nav-link" href="orders.html"><i class="fas fa-shopping-cart me-2"></i>Đơn hàng</a>
+                    <a class="nav-link" href="users.html"><i class="fas fa-users me-2"></i>Người dùng</a>
+                </div>
+            </div>
+
+            <div class="col-md-10 py-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold mb-0">
+                        <i class="fas fa-box me-2 text-primary"></i>Quản lý sản phẩm
+                    </h2>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                        <i class="fas fa-plus me-2"></i>Thêm sản phẩm
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control" id="searchProducts"
+                                    placeholder="Tìm kiếm sản phẩm...">
+                            </div>
+                            <div class="col-md-3">
+                                <select class="form-select" id="filterCategory">
+                                    <option value="">Tất cả danh mục</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-select" id="filterStatus">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="true">Đang bán</option>
+                                    <option value="false">Ngừng bán</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-primary w-100" onclick="loadProducts()">
+                                    <i class="fas fa-filter me-2"></i>Lọc
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Ảnh</th>
+                                        <th>Tên sản phẩm</th>
+                                        <th>Danh mục</th>
+                                        <th>Giá</th>
+                                        <th>Tồn kho</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="spinner-border text-primary"></div>
+                                            <p class="mt-3">Đang tải...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div id="pagination" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div class="modal fade" id="addProductModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Thêm sản phẩm mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="productForm" enctype="multipart/form-data">
+                        <input type="hidden" id="productId">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Tên sản phẩm *</label>
+                                <input type="text" class="form-control" id="productName" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Danh mục *</label>
+                                <select class="form-select" id="productCategory" required></select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả *</label>
+                            <textarea class="form-control" id="productDescription" rows="3" required></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Giá *</label>
+                                <input type="number" class="form-control" id="productPrice" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Giá gạch</label>
+                                <input type="number" class="form-control" id="productComparePrice">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Tồn kho *</label>
+                                <input type="number" class="form-control" id="productStock" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Thương hiệu</label>
+                            <input type="text" class="form-control" id="productBrand">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ảnh sản phẩm</label>
+                            <input type="file" class="form-control" id="productImages" accept="image/*" multiple>
+                            <small class="text-muted">Chọn tối đa 5 ảnh</small>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="productFeatured">
+                            <label class="form-check-label" for="productFeatured">
+                                Sản phẩm nổi bật
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="saveProduct()">
+                        <i class="fas fa-save me-2"></i>Lưu sản phẩm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn xóa sản phẩm <strong id="deleteProductName"></strong>?</p>
+                    <p class="text-danger mb-0">
+                        <i class="fas fa-warning me-1"></i>
+                        Hành động này không thể hoàn tác!
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                        <i class="fas fa-trash me-2"></i>Xóa sản phẩm
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../../assets/js/config.js"></script>
+    <script src="../../assets/js/auth.js"></script>
+    <script src="../../assets/js/api.js"></script>
+
+    <script>
+        let currentPage = 1;
+        let categories = [];
+        let productToDelete = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!requireAdmin()) return;
+            await loadCategories();
+            await loadProducts();
+        });
+
+        async function loadCategories() {
+            try {
+                const data = await getCategories();
+                if (data.success) {
+                    categories = data.data;
+                    const selects = document.querySelectorAll('#filterCategory, #productCategory');
+                    selects.forEach(select => {
+                        if (select.id === 'productCategory') {
+                            select.innerHTML = '<option value="">Chọn danh mục</option>' +
+                                categories.map(cat => `<option value="${cat._id}">${cat.name}</option>`).join('');
+                        } else {
+                            select.innerHTML = '<option value="">Tất cả danh mục</option>' +
+                                categories.map(cat => `<option value="${cat._id}">${cat.name}</option>`).join('');
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        async function loadProducts() {
+            try {
+                const params = {
+                    page: currentPage,
+                    limit: 20,
+                    search: document.getElementById('searchProducts')?.value,
+                    category: document.getElementById('filterCategory')?.value,
+                    isActive: document.getElementById('filterStatus')?.value
+                };
+
+                // Remove empty params
+                Object.keys(params).forEach(key => {
+                    if (!params[key]) delete params[key];
+                });
+
+                const data = await getProducts(params);
+
+                if (data.success) {
+                    displayProducts(data.data);
+                    if (data.pagination) {
+                        renderPagination(data.pagination.pages, currentPage, 'pagination');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+                document.getElementById('productsTable').innerHTML = `
+                    <tr><td colspan="7" class="text-center text-danger py-4">
+                        <i class="fas fa-exclamation-circle me-2"></i>Lỗi tải dữ liệu!
+                    </td></tr>
+                `;
+            }
+        }
+
+        function displayProducts(products) {
+            const tbody = document.getElementById('productsTable');
+
+            if (!products || products.length === 0) {
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">Không có sản phẩm nào</p>
+                    </td></tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = products.map(product => `
+                <tr>
+                    <td>
+                        <img src="${product.images?.[0]?.url || 'https://via.placeholder.com/50'}" 
+                             alt="${product.name}" 
+                             class="rounded"
+                             style="width: 50px; height: 50px; object-fit: cover;"
+                             onerror="this.src='https://via.placeholder.com/50'">
+                    </td>
+                    <td>
+                        <strong>${product.name}</strong>
+                        ${product.brand ? `<br><small class="text-muted">${product.brand}</small>` : ''}
+                    </td>
+                    <td>${product.category?.name || 'N/A'}</td>
+                    <td><strong class="text-primary">${formatPrice(product.price)}</strong></td>
+                    <td>
+                        <span class="badge ${product.stock > 10 ? 'bg-success' : product.stock > 0 ? 'bg-warning' : 'bg-danger'}">
+                            ${product.stock}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${product.isActive ? 'bg-success' : 'bg-secondary'}">
+                            ${product.isActive ? 'Đang bán' : 'Ngừng bán'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary me-1" 
+                                onclick="editProduct('${product._id}')"
+                                title="Sửa sản phẩm">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="confirmDelete('${product._id}', '${product.name.replace(/'/g, "\\'")}')"
+                                title="Xóa sản phẩm">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // ========== XÓA SẢN PHẨM (ĐÃ SỬA) ==========
+        function confirmDelete(id, name) {
+            productToDelete = id;
+            document.getElementById('deleteProductName').textContent = name;
+
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            deleteModal.show();
+
+            // Set up confirm button
+            document.getElementById('confirmDeleteBtn').onclick = async function () {
+                await handleDeleteProduct(id);
+                deleteModal.hide();
+            };
+        }
+
+        async function handleDeleteProduct(id) {
+            try {
+                showLoading();
+
+                // Gọi API xóa sản phẩm
+                const response = await apiCall(`/products/${id}`, {
+                    method: 'DELETE'
+                });
+
+                hideLoading();
+
+                if (response.success) {
+                    showToast('Đã xóa sản phẩm thành công!', 'success');
+                    await loadProducts(); // Reload danh sách
+                } else {
+                    showToast(response.message || 'Không thể xóa sản phẩm!', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error deleting product:', error);
+                showToast('Có lỗi xảy ra khi xóa sản phẩm!', 'error');
+            }
+        }
+
+        // ========== THÊM/SỬA SẢN PHẨM ==========
+        async function saveProduct() {
+            const productId = document.getElementById('productId').value;
+            const formData = new FormData();
+
+            formData.append('name', document.getElementById('productName').value);
+            formData.append('description', document.getElementById('productDescription').value);
+            formData.append('price', document.getElementById('productPrice').value);
+            formData.append('comparePrice', document.getElementById('productComparePrice').value || 0);
+            formData.append('stock', document.getElementById('productStock').value);
+            formData.append('category', document.getElementById('productCategory').value);
+            formData.append('brand', document.getElementById('productBrand').value);
+            formData.append('isFeatured', document.getElementById('productFeatured').checked);
+
+            const files = document.getElementById('productImages').files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+
+            try {
+                showLoading();
+                let response;
+
+                if (productId) {
+                    // Update existing product
+                    response = await updateProduct(productId, formData);
+                } else {
+                    // Create new product
+                    response = await createProduct(formData);
+                }
+
+                hideLoading();
+
+                if (response.success) {
+                    showToast(productId ? 'Cập nhật sản phẩm thành công!' : 'Thêm sản phẩm thành công!', 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('addProductModal')).hide();
+                    resetForm();
+                    await loadProducts();
+                } else {
+                    showToast(response.message || 'Có lỗi xảy ra!', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error saving product:', error);
+                showToast('Có lỗi xảy ra!', 'error');
+            }
+        }
+
+        async function editProduct(id) {
+            try {
+                showLoading();
+                const response = await getProductById(id);
+                hideLoading();
+
+                if (response.success) {
+                    const product = response.data;
+
+                    document.getElementById('productId').value = product._id;
+                    document.getElementById('productName').value = product.name;
+                    document.getElementById('productDescription').value = product.description;
+                    document.getElementById('productPrice').value = product.price;
+                    document.getElementById('productComparePrice').value = product.comparePrice || '';
+                    document.getElementById('productStock').value = product.stock;
+                    document.getElementById('productCategory').value = product.category?._id || product.category;
+                    document.getElementById('productBrand').value = product.brand || '';
+                    document.getElementById('productFeatured').checked = product.isFeatured;
+
+                    document.getElementById('modalTitle').textContent = 'Sửa sản phẩm';
+
+                    const modal = new bootstrap.Modal(document.getElementById('addProductModal'));
+                    modal.show();
+                } else {
+                    showToast('Không thể tải thông tin sản phẩm!', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error loading product:', error);
+                showToast('Có lỗi xảy ra!', 'error');
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('modalTitle').textContent = 'Thêm sản phẩm mới';
+        }
+
+        // Reset form when modal is closed
+        document.getElementById('addProductModal').addEventListener('hidden.bs.modal', resetForm);
+
+        function changePage(page) {
+            currentPage = page;
+            loadProducts();
+        }
+
+        // Helper function để hiển thị loading
+        function showLoading() {
+            // Bạn có thể thêm spinner loading ở đây
+            document.body.style.cursor = 'wait';
+        }
+
+        function hideLoading() {
+            document.body.style.cursor = 'default';
+        }
+
+        // Helper function để hiển thị toast notification
+        function showToast(message, type = 'success') {
+            // Tạo toast element
+            const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+            bsToast.show();
+
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+            return container;
+        }
+    </script>
+</body>
+
+</html>

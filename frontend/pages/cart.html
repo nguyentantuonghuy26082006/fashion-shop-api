@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giỏ hàng - Fashion Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/style.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="../index.html">
+                <i class="fas fa-shopping-bag text-primary"></i>
+                <span class="ms-2 gradient-text">FASHION SHOP</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="../index.html">Trang chủ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="products.html">Sản phẩm</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="cart.html">
+                            <i class="fas fa-shopping-cart"></i> Giỏ hàng
+                            <span class="badge bg-primary ms-1" id="cartCount">0</span>
+                        </a></li>
+                    <li class="nav-item" id="authNav"><a class="nav-link" href="login.html"><i class="fas fa-user"></i>
+                            Đăng nhập</a></li>
+                    <li class="nav-item d-none" id="userNav">
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> <span id="userName">User</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="profile.html"><i class="fas fa-user me-2"></i>Tài
+                                        khoản</a></li>
+                                <li><a class="dropdown-item" href="orders.html"><i class="fas fa-box me-2"></i>Đơn
+                                        hàng</a></li>
+                                <li class="d-none" id="adminLink"><a class="dropdown-item"
+                                        href="admin/dashboard.html"><i class="fas fa-cog me-2"></i>Quản trị</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item text-danger" href="#" onclick="logout()"><i
+                                            class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cart Section -->
+    <section class="py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="fw-bold mb-4">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Giỏ hàng của bạn
+                    </h2>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Cart Items -->
+                <div class="col-lg-8">
+                    <div id="cartItems">
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-3">Đang tải giỏ hàng...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cart Summary -->
+                <div class="col-lg-4">
+                    <div class="cart-summary">
+                        <h5 class="fw-bold mb-4">Tóm tắt đơn hàng</h5>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tạm tính:</span>
+                            <span id="subtotal" class="fw-bold">0 ₫</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Phí vận chuyển:</span>
+                            <span id="shippingFee" class="fw-bold">30,000 ₫</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 text-success">
+                            <span>Giảm giá:</span>
+                            <span id="discount" class="fw-bold">- 0 ₫</span>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between mb-4">
+                            <span class="fw-bold fs-5">Tổng cộng:</span>
+                            <span id="totalAmount" class="fw-bold fs-4 text-primary">0 ₫</span>
+                        </div>
+
+                        <!-- Coupon -->
+                        <div class="mb-3">
+                            <label class="form-label">Mã giảm giá:</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="couponCode" placeholder="Nhập mã...">
+                                <button class="btn btn-outline-primary" onclick="applyCoupon()">
+                                    Áp dụng
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary w-100 py-3 rounded-pill mb-2" onclick="goToCheckout()">
+                            <i class="fas fa-credit-card me-2"></i>
+                            Tiến hành thanh toán
+                        </button>
+
+                        <a href="products.html" class="btn btn-outline-secondary w-100 rounded-pill">
+                            <i class="fas fa-arrow-left me-2"></i>
+                            Tiếp tục mua sắm
+                        </a>
+
+                        <!-- Trust Badges -->
+                        <div class="mt-4 pt-4 border-top">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-shield-alt text-success me-2"></i>
+                                <small>Thanh toán an toàn & bảo mật</small>
+                            </div>
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-truck text-primary me-2"></i>
+                                <small>Giao hàng nhanh chóng</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-undo text-warning me-2"></i>
+                                <small>Đổi trả trong 7 ngày</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5">
+        <div class="container text-center">
+            <p class="mb-0">© 2024 Fashion Shop. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/config.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/api.js"></script>
+
+    <script>
+        let cart = null;
+        const SHIPPING_FEE = 30000;
+        const MAX_CART_ITEMS = 50; // Giới hạn tối đa 50 items
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!requireAuth()) return;
+            checkAuth();
+            loadCart();
+        });
+
+        async function loadCart() {
+            try {
+                console.log('🔄 Đang tải giỏ hàng...');
+                
+                // Add timeout to API call
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+                const response = await fetch(`${API_BASE_URL}/cart`, {
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                const data = await response.json();
+                console.log('📦 Dữ liệu giỏ hàng:', data);
+
+                if (data.success) {
+                    cart = data.data;
+                    
+                    // Check if cart has too many items
+                    if (cart.items && cart.items.length > MAX_CART_ITEMS) {
+                        console.warn('⚠️ Giỏ hàng có quá nhiều items:', cart.items.length);
+                        showCartOverloadError(cart.items.length);
+                        return;
+                    }
+
+                    displayCart();
+                    updateCartCount();
+                    console.log('✅ Tải giỏ hàng thành công!');
+                } else {
+                    throw new Error(data.message || 'Không thể tải giỏ hàng');
+                }
+            } catch (error) {
+                console.error('❌ Lỗi khi tải giỏ hàng:', error);
+                
+                let errorMessage = 'Không thể tải giỏ hàng. ';
+                if (error.name === 'AbortError') {
+                    errorMessage += 'Yêu cầu bị timeout. Giỏ hàng có thể quá lớn.';
+                } else if (error.message.includes('Failed to fetch')) {
+                    errorMessage += 'Không thể kết nối đến server.';
+                } else {
+                    errorMessage += error.message;
+                }
+
+                document.getElementById('cartItems').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h5><i class="fas fa-exclamation-triangle me-2"></i>Lỗi tải giỏ hàng</h5>
+                        <p class="mb-3">${errorMessage}</p>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-warning" onclick="loadCart()">
+                                <i class="fas fa-sync me-1"></i> Thử lại
+                            </button>
+                            <button class="btn btn-danger" onclick="clearCartConfirm()">
+                                <i class="fas fa-trash me-1"></i> Xóa giỏ hàng
+                            </button>
+                        </div>
+                        <hr>
+                        <small class="text-muted">
+                            <strong>Chi tiết lỗi:</strong> ${error.toString()}
+                        </small>
+                    </div>
+                `;
+            }
+        }
+
+        function showCartOverloadError(itemCount) {
+            document.getElementById('cartItems').innerHTML = `
+                <div class="alert alert-warning">
+                    <h5><i class="fas fa-exclamation-circle me-2"></i>Giỏ hàng quá tải</h5>
+                    <p class="mb-3">
+                        Giỏ hàng của bạn có <strong>${itemCount} sản phẩm</strong>, vượt quá giới hạn <strong>${MAX_CART_ITEMS} sản phẩm</strong>.
+                        <br>Điều này có thể gây lỗi khi đặt hàng.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" onclick="forceDisplayCart()">
+                            <i class="fas fa-eye me-1"></i> Hiển thị anyway
+                        </button>
+                        <button class="btn btn-danger" onclick="clearCartConfirm()">
+                            <i class="fas fa-trash me-1"></i> Xóa toàn bộ giỏ hàng
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function forceDisplayCart() {
+            console.log('🔨 Force display cart...');
+            displayCart();
+        }
+
+        function displayCart() {
+            const container = document.getElementById('cartItems');
+
+            if (!cart.items || cart.items.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-shopping-cart fa-5x text-muted mb-3"></i>
+                        <h4>Giỏ hàng trống</h4>
+                        <p class="text-muted">Hãy thêm sản phẩm vào giỏ hàng để tiếp tục mua sắm!</p>
+                        <a href="products.html" class="btn btn-primary rounded-pill px-5 py-3">
+                            <i class="fas fa-shopping-bag me-2"></i>
+                            Khám phá sản phẩm
+                        </a>
+                    </div>
+                `;
+                updateSummary();
+                return;
+            }
+
+            // Show warning if too many items
+            let warningHtml = '';
+            if (cart.items.length > 20) {
+                warningHtml = `
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Cảnh báo:</strong> Giỏ hàng có ${cart.items.length} sản phẩm. 
+                        Nên giảm xuống dưới 20 sản phẩm để đảm bảo đặt hàng thành công.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = warningHtml + cart.items.map((item, index) => `
+                <div class="cart-item mb-3" id="item-${item._id}">
+                    <div class="row align-items-center">
+                        <div class="col-1">
+                            <small class="text-muted">#${index + 1}</small>
+                        </div>
+                        <div class="col-md-2">
+                            <img src="${item.product?.images?.[0]?.url || 'https://via.placeholder.com/100'}" 
+                                 alt="${item.product?.name || 'Product'}" 
+                                 class="img-fluid rounded">
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="fw-bold mb-1">${item.product?.name || 'Sản phẩm'}</h6>
+                            <p class="text-muted small mb-1">
+                                ${item.size ? `Size: ${item.size} | ` : ''}
+                                ${item.color ? `Màu: ${item.color}` : ''}
+                            </p>
+                            <p class="text-primary fw-bold mb-0">${formatPrice(item.price || 0)}</p>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="input-group" style="max-width: 150px;">
+                                <button class="btn btn-outline-secondary btn-sm" 
+                                        onclick="updateQuantity('${item._id}', ${item.quantity - 1})">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" class="form-control form-control-sm text-center" 
+                                       value="${item.quantity}" min="1" readonly>
+                                <button class="btn btn-outline-secondary btn-sm" 
+                                        onclick="updateQuantity('${item._id}', ${item.quantity + 1})">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="fw-bold text-end mb-0">
+                                ${formatPrice((item.price || 0) * item.quantity)}
+                            </p>
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-sm btn-outline-danger" 
+                                    onclick="removeItem('${item._id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const subtotal = cart?.items?.reduce((sum, item) => sum + ((item.price || 0) * item.quantity), 0) || 0;
+            const shippingFee = subtotal > 500000 ? 0 : SHIPPING_FEE;
+            const discount = 0;
+            const total = subtotal + shippingFee - discount;
+
+            document.getElementById('subtotal').textContent = formatPrice(subtotal);
+            document.getElementById('shippingFee').textContent = shippingFee === 0 ? 'Miễn phí' : formatPrice(shippingFee);
+            document.getElementById('discount').textContent = discount > 0 ? `- ${formatPrice(discount)}` : '- 0 ₫';
+            document.getElementById('totalAmount').textContent = formatPrice(total);
+            document.getElementById('cartCount').textContent = cart?.items?.length || 0;
+        }
+
+        async function updateQuantity(itemId, newQuantity) {
+            if (newQuantity < 1) {
+                removeItem(itemId);
+                return;
+            }
+
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}/cart/update/${itemId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ quantity: newQuantity })
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.success) {
+                    await loadCart();
+                    showToast('Đã cập nhật số lượng!');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error updating quantity:', error);
+                showToast('Có lỗi xảy ra!', 'error');
+            }
+        }
+
+        async function removeItem(itemId) {
+            if (!confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
+
+            try {
+                showLoading();
+                const response = await fetch(`${API_BASE_URL}/cart/remove/${itemId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.success) {
+                    await loadCart();
+                    showToast('Đã xóa sản phẩm khỏi giỏ hàng!');
+                } else {
+                    showToast(data.message, 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('Error removing item:', error);
+                showToast('Có lỗi xảy ra!', 'error');
+            }
+        }
+
+        async function clearCartConfirm() {
+            const confirmed = confirm(
+                '⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ giỏ hàng?\n\n' +
+                'Thao tác này không thể hoàn tác!'
+            );
+
+            if (!confirmed) return;
+
+            // Double confirm
+            const doubleConfirm = confirm('Xác nhận lần cuối: XÓA TẤT CẢ sản phẩm trong giỏ hàng?');
+            if (!doubleConfirm) return;
+
+            try {
+                showLoading();
+                console.log('🗑️ Đang xóa giỏ hàng...');
+
+                const response = await fetch(`${API_BASE_URL}/cart/clear`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.success) {
+                    console.log('✅ Đã xóa giỏ hàng thành công!');
+                    showToast('Đã xóa toàn bộ giỏ hàng!');
+                    await loadCart();
+                } else {
+                    console.error('❌ Lỗi khi xóa giỏ hàng:', data.message);
+                    showToast(data.message || 'Không thể xóa giỏ hàng', 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                console.error('❌ Lỗi khi xóa giỏ hàng:', error);
+                showToast('Có lỗi xảy ra khi xóa giỏ hàng!', 'error');
+            }
+        }
+
+        function applyCoupon() {
+            const code = document.getElementById('couponCode').value.trim();
+            if (!code) {
+                showToast('Vui lòng nhập mã giảm giá!', 'error');
+                return;
+            }
+            showToast('Tính năng đang phát triển!', 'error');
+        }
+
+        function goToCheckout() {
+            if (!cart || !cart.items || cart.items.length === 0) {
+                showToast('Giỏ hàng trống!', 'error');
+                return;
+            }
+
+            // Check if cart is too large
+            if (cart.items.length > MAX_CART_ITEMS) {
+                const proceed = confirm(
+                    `Giỏ hàng có ${cart.items.length} sản phẩm (vượt quá giới hạn ${MAX_CART_ITEMS}).\n\n` +
+                    'Điều này có thể gây lỗi khi đặt hàng. Bạn có muốn tiếp tục?'
+                );
+                if (!proceed) return;
+            }
+
+            window.location.href = 'checkout.html';
+        }
+    </script>
+</body>
+
+</html>
