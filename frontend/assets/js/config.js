@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'https://fashion-shop-api.onrender.com/api';
 
 // Helper function: Format price to VND
 function formatPrice(price) {
