@@ -1,6 +1,23 @@
 const Product = require('../models/product.model');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../config/cloudinary');
 
+function isCloudinaryConfigured() {
+  const name = process.env.CLOUDINARY_CLOUD_NAME;
+  const key = process.env.CLOUDINARY_API_KEY;
+  const secret = process.env.CLOUDINARY_API_SECRET;
+  if (!name || !key || !secret) return false;
+  if (String(name).startsWith('your_') || String(key).startsWith('your_') || String(secret).startsWith('your_')) return false;
+  return true;
+}
+
+function mapLocalFilesToImages(req) {
+  const baseUrl = `${req.protocol}://${req.get('host')}`;
+  return (req.files || []).map(f => ({
+    public_id: f.filename,
+    url: `${baseUrl}/uploads/products/${f.filename}`
+  }));
+}
+
 /**
  * @route   GET /api/products
  * @desc    Lấy danh sách sản phẩm (có filter, search, pagination)
@@ -17,11 +34,19 @@ exports.getAllProducts = async (req, res) => {
       maxPrice,
       sortBy = 'createdAt',
       brand,
-      inStock
+      inStock,
+      isFeatured  // Thêm filter sản phẩm nổi bật
     } = req.query;
 
     // Build query
     const query = { isActive: true };
+
+    // Filter sản phẩm nổi bật
+    if (isFeatured === 'true') {
+      query.isFeatured = true;
+    } else if (isFeatured === 'false') {
+      query.isFeatured = false;
+    }
 
     if (search) {
       query.$text = { $search: search };
@@ -131,8 +156,92 @@ exports.createProduct = async (req, res) => {
       isFeatured
     } = req.body;
 
-    // Tạo sản phẩm
-    const product = await Product.create({
+    if (!name || !description || price === undefined || !category) {
+      return res.status(400).json({ success: false, message: 'Thiếu thông tin bắt buộc (tên, mô tả, giá, danh mục).' });
+    }
+
+    const product = new Product({
+      name,
+      description,
+      price: Number(price),
+      comparePrice: comparePrice !== undefined ? Number(comparePrice) : undefined,
+      cost: cost !== undefined ? Number(cost) : undefined,
+      category,
+      brand,
+      stock: stock !== undefined ? Number(stock) : 0,
+      sizes: sizes ? JSON.parse(sizes) : [],
+      colors: colors ? JSON.parse(colors) : [],
+      tags: tags ? JSON.parse(tags) : [],
+      features: features ? JSON.parse(features) : [],
+      isFeatured: isFeatured === 'true' || isFeatured === true
+    });
+
+    if (req.files && req.files.length > 0) {
+      if (isCloudinaryConfigured()) {
+        const imagePromises = req.files.map((file) => uploadToCloudinary(file.path, 'fashion-shop/products'));
+        const uploadedImages = await Promise.all(imagePromises);
+        product.images = uploadedImages;
+      } else {
+        product.images = mapLocalFilesToImages(req);
+      }
+    } else if (req.body.images) {
+      let imagesData = req.body.images;
+      
+      if (typeof imagesData === 'string') {
+        try {
+          imagesData = JSON.parse(imagesData);
+        } catch (e) {
+          imagesData = [imagesData];
+        }
+      }
+      
+      if (!Array.isArray(imagesData)) {
+        imagesData = [imagesData];
+      }
+      
+      product.images = imagesData
+        .filter(img => img)
+        .map(img => {
+          if (typeof img === 'object' && img.url) {
+            return {
+              public_id: img.public_id || `url-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              url: img.url
+            };
+          }
+          if (typeof img === 'string' && img.trim()) {
+            return {
+              public_id: `url-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              url: img.trim()
+            };
+          }
+          return null;
+        })
+        .filter(img => img !== null);
+    }
+
+    await product.save();
+    await product.populate('category', 'name');
+
+    return res.status(201).json({
+      success: true,
+      message: 'Tạo sản phẩm thành công',
+      data: product
+    });
+  } catch (error) {
+    console.error('createProduct error:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi tạo sản phẩm', error: error.message });
+  }
+};
+
+exports.updateProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm' });
+    }
+
+    const {
       name,
       description,
       price,
@@ -141,127 +250,107 @@ exports.createProduct = async (req, res) => {
       category,
       brand,
       stock,
-      sizes: sizes ? JSON.parse(sizes) : [],
-      colors: colors ? JSON.parse(colors) : [],
-      tags: tags ? JSON.parse(tags) : [],
-      features: features ? JSON.parse(features) : [],
-      isFeatured,
-      images: []
-    });
+      sizes,
+      colors,
+      tags,
+      features,
+      isFeatured
+    } = req.body;
 
-    // Upload ảnh nếu có
+    if (name !== undefined) product.name = name;
+    if (description !== undefined) product.description = description;
+    if (price !== undefined) product.price = Number(price);
+    if (comparePrice !== undefined) product.comparePrice = Number(comparePrice);
+    if (cost !== undefined) product.cost = Number(cost);
+    if (category !== undefined) product.category = category;
+    if (brand !== undefined) product.brand = brand;
+    if (stock !== undefined) product.stock = Number(stock);
+
+    if (sizes !== undefined) product.sizes = typeof sizes === 'string' ? JSON.parse(sizes) : sizes;
+    if (colors !== undefined) product.colors = typeof colors === 'string' ? JSON.parse(colors) : colors;
+    if (tags !== undefined) product.tags = typeof tags === 'string' ? JSON.parse(tags) : tags;
+    if (features !== undefined) product.features = typeof features === 'string' ? JSON.parse(features) : features;
+
+    if (isFeatured !== undefined) product.isFeatured = (isFeatured === 'true' || isFeatured === true);
+
+    // Handle images - 3 cases:
+    // 1. Upload files (req.files)
+    // 2. URL images from req.body.images (string or array)
+    // 3. Keep existing images (no changes)
+    
     if (req.files && req.files.length > 0) {
-      const imagePromises = req.files.map(file =>
-        uploadToCloudinary(file.path, 'fashion-shop/products')
-      );
 
-      const uploadedImages = await Promise.all(imagePromises);
-      product.images = uploadedImages;
-      await product.save();
-    }
-
-    await product.populate('category', 'name');
-
-    res.status(201).json({
-      success: true,
-      message: 'Thêm sản phẩm thành công!',
-      data: product
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi thêm sản phẩm',
-      error: error.message
-    });
-  }
-};
-
-/**
- * @route   PUT /api/products/:id
- * @desc    Cập nhật sản phẩm (Admin/Moderator only)
- * @access  Private/Admin/Moderator
- */
-exports.updateProduct = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Không tìm thấy sản phẩm!'
-      });
-    }
-
-    // Cập nhật các field
-    const allowedFields = [
-      'name', 'description', 'price', 'comparePrice', 'cost',
-      'category', 'brand', 'stock', 'isActive', 'isFeatured'
-    ];
-
-    allowedFields.forEach(field => {
-      if (req.body[field] !== undefined) {
-        product[field] = req.body[field];
+      if (isCloudinaryConfigured()) {
+        if (product.images && product.images.length > 0) {
+          try {
+            await Promise.all(product.images.map(img => img?.public_id ? deleteFromCloudinary(img.public_id) : Promise.resolve()));
+          } catch (e) {
+            console.warn('Warning: failed to delete old cloudinary images:', e.message);
+          }
+        }
+        const uploadedImages = await Promise.all(
+          req.files.map((file) => uploadToCloudinary(file.path, 'fashion-shop/products'))
+        );
+        product.images = uploadedImages;
+      } else {
+        product.images = mapLocalFilesToImages(req);
       }
-    });
-
-    // Xử lý arrays
-    if (req.body.sizes) product.sizes = JSON.parse(req.body.sizes);
-    if (req.body.colors) product.colors = JSON.parse(req.body.colors);
-    if (req.body.tags) product.tags = JSON.parse(req.body.tags);
-    if (req.body.features) product.features = JSON.parse(req.body.features);
-
-    // Upload ảnh mới nếu có
-    if (req.files && req.files.length > 0) {
-      // Xóa ảnh cũ trên Cloudinary
-      const deletePromises = product.images.map(img =>
-        deleteFromCloudinary(img.public_id)
-      );
-      await Promise.all(deletePromises);
-
-      // Upload ảnh mới
-      const uploadPromises = req.files.map(file =>
-        uploadToCloudinary(file.path, 'fashion-shop/products')
-      );
-      product.images = await Promise.all(uploadPromises);
+    } else if (req.body.images !== undefined) {
+  
+      let imagesData = req.body.images;
+      
+    
+      if (typeof imagesData === 'string') {
+        try {
+          imagesData = JSON.parse(imagesData);
+        } catch (e) {
+          imagesData = [imagesData];
+        }
+      }
+      
+      // Ensure it's an array
+      if (!Array.isArray(imagesData)) {
+        imagesData = [imagesData];
+      }
+      
+      // Convert to proper format { public_id, url }
+      product.images = imagesData
+        .filter(img => img) // Remove null/undefined
+        .map(img => {
+          // If already in correct format { public_id, url }
+          if (typeof img === 'object' && img.url) {
+            return {
+              public_id: img.public_id || `url-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              url: img.url
+            };
+          }
+          // If it's just a URL string
+          if (typeof img === 'string' && img.trim()) {
+            return {
+              public_id: `url-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              url: img.trim()
+            };
+          }
+          return null;
+        })
+        .filter(img => img !== null);
     }
+    // Case 3: No images provided - keep existing images
 
     await product.save();
     await product.populate('category', 'name');
 
-    res.status(200).json({
+    return res.json({
       success: true,
-      message: 'Cập nhật sản phẩm thành công!',
+      message: 'Cập nhật sản phẩm thành công',
       data: product
     });
-
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Lỗi cập nhật sản phẩm',
-      error: error.message
-    });
+    console.error('updateProduct error:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi cập nhật sản phẩm', error: error.message });
   }
 };
 
-/**
- * @route   DELETE /api/products/:id
- * @desc    Xóa sản phẩm (Admin/Moderator only)
- * @access  Private/Admin/Moderator
- */
-// ================================================
-// SỬA LỖI XÓA SẢN PHẨM
-// ================================================
-// Mở file: app/controllers/product.controller.js
-// Tìm hàm deleteProduct (khoảng dòng 252)
-// Thay thế TOÀN BỘ hàm deleteProduct bằng code bên dưới:
-// ================================================
-
-/**
- * @route   DELETE /api/products/:id
- * @desc    Xóa sản phẩm (Admin/Moderator only)
- * @access  Private/Admin/Moderator
- */
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);

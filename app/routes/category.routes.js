@@ -7,8 +7,12 @@ const { uploadSingle, handleUploadError } = require('../middlewares/upload.middl
 
 // Public routes
 router.get('/', categoryController.getAllCategories);
-
 // Protected routes - Admin/Moderator only
+router.get('/admin/all', protect, isModerator, categoryController.getAllCategoriesAdmin);
+
+// Public routes (detail)
+router.get('/:id', categoryController.getCategoryById);
+
 router.post(
   '/',
   protect,
@@ -16,6 +20,22 @@ router.post(
   uploadSingle,
   handleUploadError,
   categoryController.createCategory
+);
+
+router.put(
+  '/:id',
+  protect,
+  isModerator,
+  uploadSingle,
+  handleUploadError,
+  categoryController.updateCategory
+);
+
+router.delete(
+  '/:id',
+  protect,
+  isModerator,
+  categoryController.deleteCategory
 );
 
 module.exports = router;

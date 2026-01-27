@@ -51,6 +51,21 @@ async function register(userData) {
     });
 }
 
+// Password reset APIs
+async function forgotPassword(email) {
+    return apiCall('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+    });
+}
+
+async function resetPassword(email, token, newPassword) {
+    return apiCall('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ email, token, newPassword })
+    });
+}
+
 // Product APIs
 async function getProducts(params = {}) {
     const queryString = new URLSearchParams(params).toString();

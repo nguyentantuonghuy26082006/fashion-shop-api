@@ -658,3 +658,29 @@ footer a:hover {
 .old-price {
     font-size: 0.9rem;
 }
+
+/* ===== ADMIN DASHBOARD (Modern) ===== */
+.chart-card {
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+.chart-card .card-body {
+    padding: 1.25rem 1.25rem 1rem;
+}
+
+.chart-card h5 {
+    letter-spacing: -0.2px;
+}
+
+#revenueRange.form-select {
+    border-radius: 999px;
+    padding-left: 0.85rem;
+    padding-right: 1.75rem;
+    border-color: rgba(148, 163, 184, 0.55);
+}
+
+#revenueRange.form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.55);
+}

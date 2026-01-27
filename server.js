@@ -2,7 +2,8 @@
 // SERVER.JS - ENTRY POINT CHÍNH CỦA ỨNG DỤNG
 // ============================================
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -32,13 +33,46 @@ const app = express();
 connectDB();
 
 // ===== SECURITY MIDDLEWARES =====
-// Helmet giúp bảo vệ app khỏi các lỗ hổng bảo mật phổ biến
-app.use(helmet());
+// FIX: Cấu hình Helmet cho phép hiển thị ảnh từ mọi nguồn
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },  // Cho phép load ảnh cross-origin
+  crossOriginEmbedderPolicy: false,  // Tắt để cho phép embed resources
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "blob:", "*"],  // Cho phép ảnh từ mọi nguồn
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
+      connectSrc: ["'self'", "http://localhost:*", "https://*"],
+    },
+  },
+}));
 
-// CORS - Cho phép frontend kết nối
+// FIX: CORS - Cho phép frontend kết nối từ nhiều nguồn
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true
+  origin: function(origin, callback) {
+    // Cho phép requests không có origin (như mobile apps, Postman)
+    // và các origins từ localhost
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://localhost:5500',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:5000',
+      'http://127.0.0.1:5500',
+      process.env.CLIENT_URL
+    ].filter(Boolean);
+    
+    if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Cho phép tất cả trong development
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Rate limiting - Giới hạn số request để chống brute-force
@@ -64,8 +98,20 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // ===== STATIC FILES =====
-// Phục vụ file tĩnh từ thư mục uploads (nếu lưu ảnh local)
-app.use('/uploads', express.static('uploads'));
+// FIX: Phục vụ file tĩnh với headers cho phép cross-origin
+// Serve cả thư mục uploads và uploads/products
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
+
+// Đảm bảo tạo thư mục uploads/products nếu chưa có
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, 'uploads/products');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // ===== ROUTES =====
 // Health check endpoint
@@ -117,7 +163,7 @@ app.listen(PORT, () => {
   ║                                                       ║
   ║   🚀 FASHION SHOP SERVER ĐANG CHẠY                   ║
   ║                                                        ║
-  ║   📍 Port: ${PORT}                                    ║
+  ║   🔌 Port: ${PORT}                                    ║
   ║   🌍 Environment: ${process.env.NODE_ENV || 'development'}              ║
   ║   🔗 URL: http://localhost:${PORT}                   ║
   ║   📚 API Docs: http://localhost:${PORT}/api/docs     ║

@@ -99,6 +99,12 @@
                             <i class="fas fa-box me-2"></i>
                             Sản phẩm
                         </a>
+
+                        <a href="categories.html" class="nav-link">
+                            <i class="fas fa-tags me-2"></i>
+                            Danh mục
+                        </a>
+
                         <a href="orders.html" class="nav-link">
                             <i class="fas fa-shopping-cart me-2"></i>
                             Đơn hàng
@@ -388,6 +394,20 @@
             });
         });
 
+        // FIX: Thêm function updateUserStatus
+        async function updateUserStatus(userId, isActive) {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/users/${userId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ isActive })
+            });
+            return await response.json();
+        }
+
         async function loadUsers() {
             try {
                 showLoading();
@@ -652,6 +672,13 @@
                 
                 if (!roleData.success) {
                     throw new Error(roleData.message || 'Không thể cập nhật quyền');
+                }
+                
+                // FIX: Update status (isActive)
+                const statusData = await updateUserStatus(userId, isActive);
+                
+                if (!statusData.success) {
+                    throw new Error(statusData.message || 'Không thể cập nhật trạng thái');
                 }
                 
                 hideLoading();

@@ -57,7 +57,24 @@ exports.updateProfile = async (req, res) => {
         // Cập nhật các field được phép
         if (fullName) user.fullName = fullName;
         if (phone) user.phone = phone;
-        if (address) user.address = address;
+        
+        // FIX: Parse address từ JSON string (frontend gửi FormData)
+        if (address) {
+            try {
+                // Nếu address là string JSON, parse nó
+                const parsedAddress = typeof address === 'string' ? JSON.parse(address) : address;
+                user.address = {
+                    street: parsedAddress.street || '',
+                    city: parsedAddress.city || '',
+                    district: parsedAddress.district || '',
+                    ward: parsedAddress.ward || '',
+                    zipCode: parsedAddress.zipCode || ''
+                };
+            } catch (parseError) {
+                console.error('Error parsing address:', parseError);
+                // Nếu không parse được, giữ nguyên address cũ
+            }
+        }
 
         // Nếu có upload avatar
         if (req.file) {
@@ -149,9 +166,9 @@ exports.changePassword = async (req, res) => {
             });
         }
 
-        // Hash và cập nhật mật khẩu mới
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(newPassword, salt);
+        // FIX: Chỉ gán password mới (KHÔNG hash ở đây)
+        // Middleware pre('save') trong User model sẽ tự động hash
+        user.password = newPassword;
         await user.save();
 
         res.status(200).json({

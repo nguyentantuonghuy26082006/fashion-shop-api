@@ -153,9 +153,22 @@
                 <!-- Charts -->
                 <div class="row g-4 mb-4">
                     <div class="col-md-8">
-                        <div class="card border-0 shadow-sm">
+                        <div class="card border-0 shadow-sm chart-card">
                             <div class="card-body">
-                                <h5 class="fw-bold mb-4">Doanh thu theo tháng</h5>
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                                    <div>
+                                        <h5 class="fw-bold mb-1">Doanh thu theo tháng</h5>
+                                        <small class="text-muted">Tổng doanh thu đơn hàng đã giao (Delivered)</small>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-muted small">Khoảng thời gian</span>
+                                        <select id="revenueRange" class="form-select form-select-sm" style="width: 160px;">
+                                            <option value="6">6 tháng gần nhất</option>
+                                            <option value="12" selected>12 tháng gần nhất</option>
+                                            <option value="24">24 tháng gần nhất</option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <canvas id="revenueChart" height="80"></canvas>
                             </div>
                         </div>
@@ -209,6 +222,7 @@
 
     <script>
         let revenueChart, orderStatusChart;
+        let monthlyRevenueRaw = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (!requireAdmin()) return;
@@ -227,7 +241,9 @@
                     displayOverview(data.data.overview);
                     displayTopProducts(data.data.topProducts);
                     displayRecentOrders(data.data.recentOrders);
-                    displayRevenueChart(data.data.monthlyRevenue);
+                    monthlyRevenueRaw = Array.isArray(data.data.monthlyRevenue) ? data.data.monthlyRevenue : [];
+                    setupRevenueRange();
+                    displayRevenueChart(monthlyRevenueRaw);
                     displayOrderStatusChart(data.data.overview);
                 }
             } catch (error) {
@@ -280,7 +296,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
                     <div>
                         <h6 class="mb-1">#${order.orderNumber}</h6>
-                        <small class="text-muted">${order.user.fullName}</small>
+                        <small class="text-muted">${order.user?.fullName || 'Người dùng đã xóa'}</small>
                     </div>
                     <div class="text-end">
                         <strong class="d-block">${formatPrice(order.totalAmount)}</strong>
@@ -293,55 +309,121 @@
         }
 
         function displayRevenueChart(monthlyData) {
-            const ctx = document.getElementById('revenueChart');
+            const canvas = document.getElementById('revenueChart');
+            const ctx = canvas.getContext('2d');
 
-            const labels = monthlyData.map(m => `Tháng ${m._id.month}/${m._id.year}`);
-            const data = monthlyData.map(m => m.revenue);
+            // Destroy old chart to avoid memory leaks / overlay
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+
+            const rangeEl = document.getElementById('revenueRange');
+            const range = Number(rangeEl?.value || 12);
+            const filtered = filterMonthlyRevenue(monthlyData, range);
+
+            const labels = filtered.map(m => `T${m._id.month}/${String(m._id.year).slice(-2)}`);
+            const values = filtered.map(m => Number(m.revenue || 0));
+
+            // Nice gradient fill
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.28)');
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.02)');
 
             revenueChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [{
-                        label: 'Doanh thu',
-                        data: data,
+                        data: values,
                         borderColor: 'rgb(59, 130, 246)',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        tension: 0.4,
+                        backgroundColor: gradient,
+                        pointBackgroundColor: 'rgb(59, 130, 246)',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 3,
+                        tension: 0.35,
                         fill: true
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: {
-                            display: false
+                        legend: { display: false },
+                        tooltip: {
+                            padding: 12,
+                            backgroundColor: 'rgba(17, 24, 39, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff',
+                            displayColors: false,
+                            callbacks: {
+                                title: (items) => items?.[0]?.label || 'Doanh thu',
+                                label: (item) => ` ${formatPrice(item.parsed.y)}`
+                            }
                         }
                     },
                     scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { maxRotation: 0, autoSkip: true }
+                        },
                         y: {
                             beginAtZero: true,
+                            grid: { color: 'rgba(107, 114, 128, 0.12)' },
                             ticks: {
                                 callback: function (value) {
-                                    return (value / 1000000).toFixed(0) + 'M';
+                                    const v = Number(value || 0);
+                                    if (v >= 1000000000) return (v / 1000000000).toFixed(1) + 'B';
+                                    if (v >= 1000000) return (v / 1000000).toFixed(0) + 'M';
+                                    if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
+                                    return v;
                                 }
                             }
                         }
-                    }
+                    },
+                    animation: { duration: 900 }
                 }
             });
+        }
+
+        function setupRevenueRange() {
+            const rangeEl = document.getElementById('revenueRange');
+            if (!rangeEl) return;
+            // Avoid binding multiple times
+            if (rangeEl.dataset.bound === '1') return;
+            rangeEl.dataset.bound = '1';
+            rangeEl.addEventListener('change', () => {
+                displayRevenueChart(monthlyRevenueRaw);
+            });
+        }
+
+        function filterMonthlyRevenue(monthlyData, months) {
+            const data = Array.isArray(monthlyData) ? monthlyData.slice() : [];
+            // Sort ascending by year/month in case API doesn't guarantee order
+            data.sort((a, b) => {
+                const ay = a?._id?.year || 0;
+                const am = a?._id?.month || 0;
+                const by = b?._id?.year || 0;
+                const bm = b?._id?.month || 0;
+                return ay !== by ? ay - by : am - bm;
+            });
+            if (!months || months <= 0) return data;
+            return data.slice(-months);
         }
 
         function displayOrderStatusChart(overview) {
             const ctx = document.getElementById('orderStatusChart');
 
-            // Mock data - adjust based on actual API
+            // FIX: Lấy dữ liệu thực từ API thay vì mock data
+            const ordersByStatus = overview.ordersByStatus || {};
             const statusData = [
-                overview.pendingOrders || 0,
-                Math.floor(overview.totalOrders * 0.3),
-                Math.floor(overview.totalOrders * 0.5),
-                Math.floor(overview.totalOrders * 0.1)
+                ordersByStatus.pending || 0,      // Chờ xử lý
+                (ordersByStatus.confirmed || 0) + (ordersByStatus.processing || 0) + (ordersByStatus.shipping || 0),  // Đang xử lý (gộp các trạng thái đang xử lý)
+                ordersByStatus.delivered || 0,    // Hoàn thành
+                ordersByStatus.cancelled || 0     // Đã hủy
             ];
 
             orderStatusChart = new Chart(ctx, {

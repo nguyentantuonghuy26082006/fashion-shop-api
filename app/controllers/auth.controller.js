@@ -2,6 +2,8 @@ const User = require('../models/user.model');
 const Role = require('../models/role.model');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const { sendEmail } = require('../utils/sendEmail');
 
 // ================================================
 // GENERATE JWT TOKEN
@@ -441,6 +443,147 @@ exports.changePassword = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Lỗi đổi mật khẩu!'
+        });
+    }
+};
+
+// ================================================
+// FORGOT PASSWORD - GỬI EMAIL RESET LINK
+// ================================================
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Vui lòng nhập email!'
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        const user = await User.findOne({ email: normalizedEmail });
+
+        // Không leak thông tin user tồn tại hay không
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message: 'Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.'
+            });
+        }
+
+        // Tạo reset token (raw) và lưu hash vào DB
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const resetTokenHash = crypto
+            .createHash('sha256')
+            .update(resetToken)
+            .digest('hex');
+
+        const expireMinutes = parseInt(process.env.RESET_PASSWORD_EXPIRE_MINUTES || '15', 10);
+        user.resetPasswordToken = resetTokenHash;
+        user.resetPasswordExpire = new Date(Date.now() + expireMinutes * 60 * 1000);
+
+        await user.save({ validateBeforeSave: false });
+
+        const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+        const resetUrl = `${clientUrl}/pages/reset-password.html?token=${resetToken}&email=${encodeURIComponent(normalizedEmail)}`;
+
+        const html = `
+            <h2>Yêu cầu đặt lại mật khẩu</h2>
+            <p>Xin chào <b>${user.fullName}</b>,</p>
+            <p>Bạn (hoặc ai đó) vừa yêu cầu đặt lại mật khẩu cho tài khoản Fashion Shop.</p>
+            <p>Nhấn vào nút bên dưới để đặt lại mật khẩu (hết hạn sau <b>${expireMinutes} phút</b>):</p>
+            <p>
+              <a href="${resetUrl}" style="display:inline-block;background:#667eea;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none;">
+                Đặt lại mật khẩu
+              </a>
+            </p>
+            <p>Nếu bạn không yêu cầu thao tác này, hãy bỏ qua email.</p>
+            <p style="color:#6b7280;font-size:12px;">Link: ${resetUrl}</p>
+        `;
+
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Đặt lại mật khẩu - Fashion Shop',
+                html
+            });
+        } catch (mailErr) {
+            // Để dev/test không bị kẹt nếu chưa cấu hình email
+            console.error('Send reset email failed:', mailErr.message);
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Nếu email tồn tại, chúng tôi đã gửi hướng dẫn đặt lại mật khẩu.',
+            ...(process.env.NODE_ENV === 'development' ? { data: { resetUrl } } : {})
+        });
+
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi gửi email đặt lại mật khẩu!'
+        });
+    }
+};
+
+// ================================================
+// RESET PASSWORD - ĐẶT LẠI MẬT KHẨU BẰNG TOKEN
+// ================================================
+exports.resetPassword = async (req, res) => {
+    try {
+        const { email, token, newPassword } = req.body;
+
+        if (!email || !token || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: 'Vui lòng nhập đầy đủ thông tin!'
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: 'Mật khẩu mới phải có ít nhất 6 ký tự!'
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+        const user = await User.findOne({
+            email: normalizedEmail,
+            resetPasswordToken: tokenHash,
+            resetPasswordExpire: { $gt: new Date() }
+        }).select('+password');
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token không hợp lệ hoặc đã hết hạn!'
+            });
+        }
+
+        // Update password (pre-save sẽ tự hash)
+        user.password = newPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+        user.refreshToken = undefined; // thu hồi refresh token nếu có
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập lại.'
+        });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi đặt lại mật khẩu!'
         });
     }
 };

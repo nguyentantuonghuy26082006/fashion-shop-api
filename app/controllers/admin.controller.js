@@ -14,7 +14,7 @@ exports.getDashboard = async (req, res) => {
     const totalProducts = await Product.countDocuments();
     const totalOrders = await Order.countDocuments();
 
-    // Doanh thu
+    // Doanh thu tổng (chỉ tính đơn đã giao + đã thanh toán)
     const revenueResult = await Order.aggregate([
       { $match: { status: 'delivered', paymentStatus: 'paid' } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
@@ -24,6 +24,26 @@ exports.getDashboard = async (req, res) => {
     // Đơn hàng pending
     const pendingOrders = await Order.countDocuments({ status: 'pending' });
 
+    // FIX: Thống kê đơn hàng theo từng trạng thái cho biểu đồ
+    const orderStatusStats = await Order.aggregate([
+      { $group: { _id: '$status', count: { $sum: 1 } } }
+    ]);
+    
+    // Chuyển đổi thành object dễ sử dụng
+    const ordersByStatus = {
+      pending: 0,
+      confirmed: 0,
+      processing: 0,
+      shipping: 0,
+      delivered: 0,
+      cancelled: 0
+    };
+    orderStatusStats.forEach(item => {
+      if (ordersByStatus.hasOwnProperty(item._id)) {
+        ordersByStatus[item._id] = item.count;
+      }
+    });
+
     // Sản phẩm bán chạy
     const topProducts = await Product.find()
       .sort({ soldCount: -1 })
@@ -31,20 +51,33 @@ exports.getDashboard = async (req, res) => {
       .select('name soldCount price images');
 
     // Đơn hàng gần đây
-    const recentOrders = await Order.find()
+    const recentOrdersRaw = await Order.find()
       .sort({ createdAt: -1 })
       .limit(10)
       .populate('user', 'fullName email')
       .populate('items.product', 'name');
 
-    // Doanh thu theo tháng (6 tháng gần nhất)
+    // FIX: Xử lý trường hợp user bị null (user đã bị xóa)
+    const recentOrders = recentOrdersRaw.map(order => {
+      const orderObj = order.toObject();
+      if (!orderObj.user) {
+        orderObj.user = {
+          _id: null,
+          fullName: 'Người dùng đã xóa',
+          email: 'N/A'
+        };
+      }
+      return orderObj;
+    });
+
+    // ===== Doanh thu theo tháng (6 tháng gần nhất) - theo ngày giao thành công =====
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
     const monthlyRevenue = await Order.aggregate([
       {
         $match: {
-          createdAt: { $gte: sixMonthsAgo },
+          deliveredAt: { $gte: sixMonthsAgo },
           status: 'delivered',
           paymentStatus: 'paid'
         }
@@ -52,14 +85,47 @@ exports.getDashboard = async (req, res) => {
       {
         $group: {
           _id: {
-            year: { $year: '$createdAt' },
-            month: { $month: '$createdAt' }
+            year: { $year: '$deliveredAt' },
+            month: { $month: '$deliveredAt' }
           },
           revenue: { $sum: '$totalAmount' },
           orders: { $sum: 1 }
         }
       },
       { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    // ===== Doanh thu theo ngày (ngày giao thành công) - mặc định 30 ngày =====
+    const days = Number(req.query.days || 30);
+
+    const start = new Date();
+    start.setDate(start.getDate() - days + 1);
+    start.setHours(0, 0, 0, 0);
+
+    const dailyRevenue = await Order.aggregate([
+      {
+        $match: {
+          deliveredAt: { $gte: start },
+          status: 'delivered',
+          paymentStatus: 'paid'
+        }
+      },
+      {
+        $group: {
+          _id: {
+            date: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: '$deliveredAt',
+                timezone: 'Asia/Ho_Chi_Minh'
+              }
+            }
+          },
+          revenue: { $sum: '$totalAmount' },
+          orders: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.date': 1 } }
     ]);
 
     res.status(200).json({
@@ -70,11 +136,13 @@ exports.getDashboard = async (req, res) => {
           totalProducts,
           totalOrders,
           totalRevenue,
-          pendingOrders
+          pendingOrders,
+          ordersByStatus  // FIX: Thêm thống kê trạng thái đơn hàng
         },
         topProducts,
         recentOrders,
-        monthlyRevenue
+        monthlyRevenue,
+        dailyRevenue
       }
     });
 
@@ -168,12 +236,26 @@ exports.getAllOrders = async (req, res) => {
       ];
     }
 
-    const orders = await Order.find(query)
+    const ordersRaw = await Order.find(query)
       .populate('user', 'fullName email phone')
       .populate('items.product', 'name images')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
+
+    // FIX: Xử lý trường hợp user bị null (user đã bị xóa)
+    const orders = ordersRaw.map(order => {
+      const orderObj = order.toObject();
+      if (!orderObj.user) {
+        orderObj.user = {
+          _id: null,
+          fullName: 'Người dùng đã xóa',
+          email: 'N/A',
+          phone: 'N/A'
+        };
+      }
+      return orderObj;
+    });
 
     const total = await Order.countDocuments(query);
 

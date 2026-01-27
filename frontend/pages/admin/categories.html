@@ -430,19 +430,22 @@
             try {
                 showLoading();
                 
-                const response = await fetch(`${API_BASE_URL}/categories`, {
+                const response = await fetch(`${API_BASE_URL}/categories/admin/all`, {
                     headers: {
                         'Authorization': `Bearer ${getToken()}`
                     }
                 });
-                
+
                 const data = await response.json();
                 hideLoading();
 
                 if (data.success) {
-                    allCategories = data.data;
+                    // Admin endpoint trả về { summary, categories }
+                    allCategories = data.data.categories || [];
                     filteredCategories = [...allCategories];
-                    updateStatistics();
+
+                    // Update statistics từ summary (nếu có), fallback tính từ mảng
+                    updateStatistics(data.data.summary);
                     displayCategories();
                 } else {
                     showToast('Không thể tải danh mục!', 'error');
@@ -456,12 +459,15 @@
             }
         }
 
-        function updateStatistics() {
+        function updateStatistics(summary = null) {
             const total = allCategories.length;
             const active = allCategories.filter(c => c.isActive !== false).length;
-            
-            // Calculate total products (if category has productCount)
-            const totalProds = allCategories.reduce((sum, c) => sum + (c.productCount || 0), 0);
+
+            // Ưu tiên số liệu backend tính sẵn (đúng & nhanh), fallback tự tính
+            const totalProds = summary && typeof summary.totalProducts === 'number'
+                ? summary.totalProducts
+                : allCategories.reduce((sum, c) => sum + (c.productCount || 0), 0);
+
             const avg = total > 0 ? Math.round(totalProds / total) : 0;
 
             document.getElementById('totalCategories').textContent = total;

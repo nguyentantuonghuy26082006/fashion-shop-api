@@ -14,6 +14,7 @@ router.put('/change-password', protect, userController.changePassword);
 router.get('/', protect, isAdmin, userController.getAllUsers);
 router.get('/:id', protect, isAdmin, userController.getUserById);
 router.put('/:id/role', protect, isAdmin, userController.changeUserRole);
+router.put('/:id/status', protect, isAdmin, userController.changeUserStatus);  // FIX: Thêm route cập nhật trạng thái
 router.delete('/:id', protect, isAdmin, userController.deleteUser);
 
 module.exports = router;
